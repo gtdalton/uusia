@@ -1,0 +1,24 @@
+name: Daily Script
+
+on:
+  schedule:
+    - cron: "0 8 * * *"  # runs every day at 8am UTC
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirments.txt
+
+      - name: Run script
+        env:
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: python main.py
