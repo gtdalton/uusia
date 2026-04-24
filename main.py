@@ -31,7 +31,7 @@ class Loan:
 
     def __repr__(self):
         if self.due_days() > 0:
-            return f"{self.title} due in {self.due_days()} days, {self.renewals_remaining} renewals remaining."
+            return f"{self.title} due in {self.due_days()} days ({self.due_date.strftime('%d %b %Y')}), {self.renewals_remaining} renewals remaining."
         elif self.due_days() == 0:
             return f"{self.title} is due today, Renewal: {self.status}, {self.renewals_remaining} renewals remaining."
         else:
@@ -54,9 +54,13 @@ class Session:
 
 def check_books():
     session = Session()
-    if os.environ.get("GITHUB_ACTIONS") == "true":
+    # if os.environ.get("GITHUB_ACTIONS") == "true"
+    if not(os.environ.get("PYDEVD_USE_FRAME_EVAL")):
         options = Options()
         options.add_argument("--headless")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
     else:
         options = None
     with webdriver.Chrome(options=options) as driver:
@@ -95,7 +99,7 @@ def check_books():
                 By.XPATH, '//div[@id="tabMYACCOUNT-body"]//a'
             )))
             session.login_success = True
-            "Logged in successfully! Finding loans"
+            print("Logged in successfully! Finding loans")
             current_loans.click()
 
             loans = wait.until(EC.visibility_of_element_located((By.XPATH, '//div[@id="mainContent"]//tbody'))).find_elements(By.TAG_NAME, "tr")
@@ -127,7 +131,8 @@ def check_books():
                 if status == "Success":
                     session.loans[title].renewals_remaining -= 1
                 session.loans[title].due_date = due_date
-
+        except:
+            driver.save_screenshot("debug.png")
         finally:
             return session
 
@@ -139,9 +144,9 @@ def check_books():
 def send_email(session):
     user = os.getenv("EMAIL_USER")
     password = os.getenv("EMAIL_PASSWORD")
-
+    print("Sending email...")
     msg = MIMEText(str(session))
-    msg["Subject"] = "Daily Library"
+    msg["Subject"] = "Daily Library Loan Report"
     msg["From"] = f"Uusia Daily Email<{user}>"
     msg["To"] = user
 
@@ -153,7 +158,7 @@ def send_email(session):
 def main():
     message = check_books()
     print(message)
-    send_email(message)
+    # send_email(message)
 
 if __name__ == "__main__":
     main()

@@ -22,3 +22,10 @@ jobs:
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python main.py
+
+      - name: Upload screenshot on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-screenshot
+          path: debug.png
