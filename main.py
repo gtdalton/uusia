@@ -22,14 +22,19 @@ class Loan:
     renewals_remaining: int
     status: str = ""
 
-    def due_days(self):
+    def due_days(self)->int:
         return (self.due_date - datetime.date.today()).days
 
-    def is_due_for_renewal(self):
+    def is_due_for_renewal(self)->bool:
         return self.due_days() == 0 and self.renewals_remaining > 0
 
+    def get_status(self)->str:
+       return self.status or "Due" if self.renewals_remaining == 0 else "On Loan"
 
-    def __repr__(self):
+    def table_row(self)->list[str]:
+        return [self.title, self.due_date.strftime("%d %b %Y"), self.renewals_remaining, self.get_status()]
+
+    def __repr__(self)->str:
         if self.due_days() > 0:
             return f"{self.title} due in {self.due_days()} days ({self.due_date.strftime('%d %b %Y')}), {self.renewals_remaining} renewals remaining."
         elif self.due_days() == 0:
@@ -137,15 +142,92 @@ def check_books():
             return session
 
 
+def get_status_badge(text):
+    text_lower = text.lower()
+    if "overdue" in text_lower:
+        bg, color = "#f8d7da", "#842029"
+    elif "paid" in text_lower:
+        bg, color = "#d1e7dd", "#0a6640"
+    else:  # pending or anything else
+        bg, color = "#fff3cd", "#856404"
+
+    return f'<span style="background-color: {bg}; color: {color}; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">{text}</span>'
 
 
+def build_table(headers, rows):
+    header_html = "".join(
+        f'<th style="padding: 10px 14px; text-align: left; background-color: #f8f8f8; border-bottom: 2px solid #dddddd; font-size: 12px; color: #555555; text-transform: uppercase; letter-spacing: 0.5px;">{h}</th>'
+        for h in headers
+    )
+    status_column_index = headers.index("Status")
+    rows_html = ""
+    for i, row in enumerate(rows):
+        bg = "#ffffff" if i % 2 == 0 else "#fafafa"
+        cells = ""
+        for j, cell in enumerate(row):
+            content = get_status_badge(cell) if j == status_column_index else cell
+            nowrap = "white-space: nowrap;" if j == status_column_index else ""
+            cells += f'<td style="padding: 12px 14px; border-bottom: 1px solid #eeeeee; font-size: 14px; color: #333333; {nowrap}">{content}</td>'
+        rows_html += f'<tr style="background-color: {bg};">{cells}</tr>'
+
+    return f"""
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+        <tr>{header_html}</tr>
+        {rows_html}
+    </table>
+    """
+
+
+def build_email(title, content_html):
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+
+        <!-- outer wrapper -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 30px 0;">
+        <tr><td align="center">
+
+            <!-- card -->
+            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+                <!-- header -->
+                <tr>
+                    <td style="background-color: #005EB8; padding: 24px 32px;">
+                        <h1 style="margin: 0; color: #ffffff; font-size: 20px;">{title}</h1>
+                    </td>
+                </tr>
+
+                <!-- body -->
+                <tr>
+                    <td style="padding: 32px;">
+                        {content_html}
+                    </td>
+                </tr>
+
+                <!-- footer -->
+                <tr>
+                    <td style="background-color: #f4f4f4; padding: 16px 32px; border-top: 1px solid #eeeeee;">
+                        <p style="margin: 0; color: #999999; font-size: 12px;">
+                            Generated automatically · {datetime.datetime.now().strftime("%d %b %Y %H:%M")}
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td></tr>
+        </table>
+
+    </body>
+    </html>
+    """
 
 
 def send_email(session):
     user = os.getenv("EMAIL_USER")
     password = os.getenv("EMAIL_PASSWORD")
-    print("Sending email...")
-    msg = MIMEText(str(session))
+    msg = MIMEText(build_email("Loans", build_table(["Title", "Due Date", "Renewals Remaining", "Status"], [loan.table_row() for loan in session.loans.values()])), "html")
     msg["Subject"] = "Daily Library Loan Report"
     msg["From"] = f"Uusia Daily Email<{user}>"
     msg["To"] = user
