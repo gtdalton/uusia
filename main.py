@@ -158,7 +158,7 @@ def send_email(session):
 def main():
     message = check_books()
     print(message)
-    # send_email(message)
+    send_email(message)
 
 if __name__ == "__main__":
     main()
