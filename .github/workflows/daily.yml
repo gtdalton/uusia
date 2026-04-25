@@ -21,6 +21,9 @@ jobs:
       - name: Run script
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          SPYDUS_PASSWORD: ${{ secrets.SPYDUS_PASSWORD }}
+          SPYDUS_USERNAME: ${{ secrets.SPYDUS_USERNAME }}
         run: python main.py
 
       - name: Upload screenshot on failure
