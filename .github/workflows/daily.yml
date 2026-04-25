@@ -2,7 +2,7 @@ name: Daily Script
 
 on:
   schedule:
-    - cron: "0 8 * * *"  # runs every day at 8am UTC
+    - cron: "0 4 * * *"  # runs every day at 8am UTC
 
 jobs:
   run-script:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Upload screenshot on failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: debug-screenshot
           path: debug.png
