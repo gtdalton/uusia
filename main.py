@@ -126,6 +126,10 @@ def check_books():
             #Renew selections
             wait.until(EC.element_to_be_clickable((By.XPATH, '//a[text()="Renew selections"]'))).click()
             loans = wait.until(EC.visibility_of_element_located((By.XPATH, '//div[@class="result-content-records"]//tbody'))).find_elements(By.TAG_NAME, "tr")
+
+            #Testing - remove this line
+            driver.save_screenshot("debug.png")
+
             for loan_row in loans:
                 title = loan_row.find_element(By.XPATH, './/td/h3[@class="card-title mb-0"]/span/a/span').text
                 due_date = datetime.datetime.strptime(
