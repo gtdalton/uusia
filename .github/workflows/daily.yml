@@ -8,12 +8,12 @@ jobs:
   run-script:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -22,7 +22,7 @@ jobs:
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          SPYDUS_PASSWORD: ${{ secrets.SPYDUS_PASSWORD }}
+          SPYDUS_PIN: ${{ secrets.SPYDUS_PASSWORD }}
           SPYDUS_USERNAME: ${{ secrets.SPYDUS_USERNAME }}
         run: python main.py
 
