@@ -23,9 +23,10 @@ jobs:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python main.py
 
-      - name: Upload screenshot on failure
-        if: failure()
+      - name: Upload screenshot
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: debug-screenshot
           path: debug.png
+        continue-on-error: true
