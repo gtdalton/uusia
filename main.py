@@ -87,7 +87,7 @@ def check_books():
             element.click()
 
             username = os.getenv("SPYDUS_USERNAME")
-            pin = os.getenv("SPYDUS_PIN")
+            SPYDUS_PASSWORD = os.getenv("SPYDUS_PASSWORD")
 
             field = wait.until(EC.element_to_be_clickable((By.ID, "user_name")))
             field.clear()  # clear any existing text first
@@ -95,7 +95,7 @@ def check_books():
 
             field = wait.until(EC.element_to_be_clickable((By.ID, "user_password")))
             field.clear()  # clear any existing text first
-            field.send_keys(pin)
+            field.send_keys(SPYDUS_PASSWORD)
 
             field.send_keys(Keys.RETURN)
 
@@ -225,15 +225,15 @@ def build_email(title, content_html):
 
 
 def send_email(session):
-    user = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASSWORD")
+    EMAIL_USERNAME = os.getenv("EMAIL_USERNAME")
+    EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
     msg = MIMEText(build_email("Loans", build_table(["Title", "Due Date", "Renewals Remaining", "Status"], [loan.table_row() for loan in session.loans.values()])), "html")
     msg["Subject"] = "Daily Library Loan Report"
-    msg["From"] = f"Uusia Daily Email<{user}>"
-    msg["To"] = user
+    msg["From"] = f"Uusia Daily Email<{EMAIL_USERNAME}>"
+    msg["To"] = EMAIL_USERNAME
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(user, password)
+        server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
         server.send_message(msg)
 
 

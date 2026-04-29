@@ -21,8 +21,8 @@ jobs:
       - name: Run script
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          SPYDUS_PIN: ${{ secrets.SPYDUS_PASSWORD }}
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          SPYDUS_PASSWORD: ${{ secrets.SPYDUS_PASSWORD }}
           SPYDUS_USERNAME: ${{ secrets.SPYDUS_USERNAME }}
         run: python main.py
 
