@@ -32,4 +32,4 @@ jobs:
         with:
           name: debug-screenshot
           path: debug.png
-        continue-on-error: true
+          if-no-files-found: ignore
