@@ -20,7 +20,7 @@ class Loan:
     title: str
     due_date: datetime.date
     renewals_remaining: int
-    status: str = ""
+    renewed: bool = False
 
     def due_days(self)->int:
         return (self.due_date - datetime.date.today()).days
@@ -28,8 +28,15 @@ class Loan:
     def is_due_for_renewal(self)->bool:
         return self.due_days() == 0 and self.renewals_remaining > 0
 
-    def get_status(self)->str:
-       return self.status or "Due" if self.renewals_remaining == 0 else "On Loan"
+    def get_status(self)->tuple[int, str]:
+       if self.renewed:
+            return (1, "Renewed Today")
+       elif self.due_days() < 0:
+           return (3, "Overdue")
+       elif self.renewals_remaining == 0:
+           return (2, "Due for renewal")
+       else:
+           return (1, "On Loan")
 
     def table_row(self)->list[str]:
         return [self.title, self.due_date.strftime("%d %b %Y"), self.renewals_remaining, self.get_status()]
@@ -38,9 +45,9 @@ class Loan:
         if self.due_days() > 0:
             return f"{self.title} due in {self.due_days()} days ({self.due_date.strftime('%d %b %Y')}), {self.renewals_remaining} renewals remaining."
         elif self.due_days() == 0:
-            return f"{self.title} is due today, Renewal: {self.status}, {self.renewals_remaining} renewals remaining."
+            return f"{self.title} is due today, Renewal: {'Success!' if self.renewed else 'Failed'}, {self.renewals_remaining} renewals remaining."
         else:
-            return f"{self.title} is overdue by {abs(self.due_days())}, Renewal: {self.status}, {self.renewals_remaining} renewals remaining."
+            return f"{self.title} is overdue by {abs(self.due_days())}, Renewal: {'Success!' if self.renewed else 'Failed'}, {self.renewals_remaining} renewals remaining."
 
 
 @dataclasses.dataclass
@@ -136,8 +143,8 @@ def check_books():
                     loan_row.find_element(By.XPATH, './/td[@data-caption="Due"]/span').text, "%d %b %Y"
                 ).date()
                 status = loan_row.find_elements(By.TAG_NAME, "td")[4].find_element(By.XPATH, './/div').text
-                session.loans[title].status = status
                 if status == "Success":
+                    session.loans[title].renewed = True
                     session.loans[title].renewals_remaining -= 1
                 session.loans[title].due_date = due_date
         except:
@@ -146,14 +153,16 @@ def check_books():
             return session
 
 
-def get_status_badge(text):
-    text_lower = text.lower()
-    if "overdue" in text_lower:
-        bg, color = "#f8d7da", "#842029"
-    elif "paid" in text_lower:
-        bg, color = "#d1e7dd", "#0a6640"
-    else:  # pending or anything else
-        bg, color = "#fff3cd", "#856404"
+def get_status_badge(level:int, text:str)-> str:
+    match level:
+        case 1:
+            bg, color = "#d1e7dd", "#0a6640"
+        case 2:
+            bg, color = "#fff3cd", "#856404"
+        case 3:
+            bg, color = "#f8d7da", "#842029"
+        case _:
+            bg, color = "#ffffff", "#000000"
 
     return f'<span style="background-color: {bg}; color: {color}; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">{text}</span>'
 
@@ -169,7 +178,7 @@ def build_table(headers, rows):
         bg = "#ffffff" if i % 2 == 0 else "#fafafa"
         cells = ""
         for j, cell in enumerate(row):
-            content = get_status_badge(cell) if j == status_column_index else cell
+            content = get_status_badge(*cell) if j == status_column_index else cell
             nowrap = "white-space: nowrap;" if j == status_column_index else ""
             cells += f'<td style="padding: 12px 14px; border-bottom: 1px solid #eeeeee; font-size: 14px; color: #333333; {nowrap}">{content}</td>'
         rows_html += f'<tr style="background-color: {bg};">{cells}</tr>'
