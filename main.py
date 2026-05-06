@@ -28,6 +28,11 @@ class Loan:
     def is_due_for_renewal(self)->bool:
         return self.due_days() == 0 and self.renewals_remaining > 0
 
+    def renew(self, due_date: datetime.date)->None:
+        self.due_date = due_date
+        self.renewed = True
+        self.renewals_remaining -= 1
+
     def get_status(self)->tuple[int, str]:
        if self.renewed:
             return (1, "Renewed Today")
@@ -144,9 +149,9 @@ def check_books():
                 ).date()
                 status = loan_row.find_elements(By.TAG_NAME, "td")[4].find_element(By.XPATH, './/div').text
                 if status == "Success":
-                    session.loans[title].renewed = True
-                    session.loans[title].renewals_remaining -= 1
-                session.loans[title].due_date = due_date
+                    session.loans[title].renew(due_date)
+
+
         except:
             driver.save_screenshot("debug.png")
         finally:
