@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 @dataclasses.dataclass
 class Loan:
     title: str
@@ -22,31 +23,31 @@ class Loan:
     renewals_remaining: int
     renewed: bool = False
 
-    def due_days(self)->int:
+    def due_days(self) -> int:
         return (self.due_date - datetime.date.today()).days
 
-    def is_due_for_renewal(self)->bool:
+    def is_due_for_renewal(self) -> bool:
         return self.due_days() == 0 and self.renewals_remaining > 0
 
-    def renew(self, due_date: datetime.date)->None:
+    def renew(self, due_date: datetime.date) -> None:
         self.due_date = due_date
         self.renewed = True
         self.renewals_remaining -= 1
 
-    def get_status(self)->tuple[int, str]:
-       if self.renewed:
+    def get_status(self) -> tuple[int, str]:
+        if self.renewed:
             return (1, "Renewed Today")
-       elif self.due_days() < 0:
-           return (3, "Overdue")
-       elif self.renewals_remaining == 0:
-           return (2, "Due for renewal")
-       else:
-           return (1, "On Loan")
+        elif self.due_days() < 0:
+            return (3, "Overdue")
+        elif self.renewals_remaining == 0:
+            return (2, "Due for renewal")
+        else:
+            return (1, "On Loan")
 
-    def table_row(self)->list[str]:
+    def table_row(self) -> list[str]:
         return [self.title, self.due_date.strftime("%d %b %Y"), self.renewals_remaining, self.get_status()]
 
-    def __repr__(self)->str:
+    def __repr__(self) -> str:
         if self.due_days() > 0:
             return f"{self.title} due in {self.due_days()} days ({self.due_date.strftime('%d %b %Y')}), {self.renewals_remaining} renewals remaining."
         elif self.due_days() == 0:
@@ -72,7 +73,7 @@ class Session:
 def check_books():
     session = Session()
     # if os.environ.get("GITHUB_ACTIONS") == "true"
-    if not(os.environ.get("PYDEVD_USE_FRAME_EVAL")):
+    if not (os.environ.get("PYDEVD_LOAD_VALUES_ASYNC")):
         options = Options()
         options.add_argument("--headless")
         options.add_argument("--window-size=1920,1080")
@@ -86,8 +87,7 @@ def check_books():
             driver.get("https://brighton-hove.spydus.co.uk/")
             wait = WebDriverWait(driver, 10)  # wait up to 10 seconds
 
-
-            #Clear cookies
+            # Clear cookies
             try:
                 accept_btn = wait.until(EC.element_to_be_clickable((By.ID, "offcanvasCookie_req")))
                 accept_btn.click()
@@ -111,15 +111,16 @@ def check_books():
 
             field.send_keys(Keys.RETURN)
 
-
             current_loans = wait.until(EC.element_to_be_clickable((
-                By.XPATH, '//div[@id="tabMYACCOUNT-body"]//a'
+                By.XPATH, '//a[contains(@href, "LOANRENQ")]'
             )))
             session.login_success = True
             print("Logged in successfully! Finding loans")
             current_loans.click()
 
-            loans = wait.until(EC.visibility_of_element_located((By.XPATH, '//div[@id="mainContent"]//tbody'))).find_elements(By.TAG_NAME, "tr")
+            loans = wait.until(
+                EC.visibility_of_element_located((By.XPATH, '//div[@id="mainContent"]//tbody'))).find_elements(
+                By.TAG_NAME, "tr")
             if not loans:
                 print("No loans found")
                 return session
@@ -127,19 +128,21 @@ def check_books():
                 title = loan_row.find_element(By.XPATH, './/td/h3[@class="card-title mb-0"]/span/a/span').text
                 due_date = datetime.datetime.strptime(
                     loan_row.find_element(By.XPATH, './/td[@data-caption="Due"]/span').text, "%d %b %Y"
-                    ).date()
-                renewals_remaining = 4 - int(re.search(r"\d+", loan_row.find_element(By.XPATH, './/span[contains(text(), "Renewed")]').text).group())
+                ).date()
+                renewals_remaining = 4 - int(re.search(r"\d+", loan_row.find_element(By.XPATH,
+                                                                                     './/span[contains(text(), "Renewed")]').text).group())
                 loan = Loan(title, due_date, renewals_remaining)
                 session.loans[title] = loan
 
                 if loan.is_due_for_renewal():
-                    #select due
-                    loan_row.find_element(By.XPATH, f'.//input[@id="selCheck{i+1}"]').click()
-            #Renew selections
+                    # select due
+                    loan_row.find_element(By.XPATH, f'.//input[@id="selCheck{i + 1}"]').click()
+            # Renew selections
             wait.until(EC.element_to_be_clickable((By.XPATH, '//a[text()="Renew selections"]'))).click()
-            loans = wait.until(EC.visibility_of_element_located((By.XPATH, '//div[@class="result-content-records"]//tbody'))).find_elements(By.TAG_NAME, "tr")
+            loans = wait.until(EC.visibility_of_element_located(
+                (By.XPATH, '//div[@class="result-content-records"]//tbody'))).find_elements(By.TAG_NAME, "tr")
 
-            #Testing - remove this line
+            # Testing - remove this line
             driver.save_screenshot("debug.png")
 
             for loan_row in loans:
@@ -158,7 +161,7 @@ def check_books():
             return session
 
 
-def get_status_badge(level:int, text:str)-> str:
+def get_status_badge(level: int, text: str) -> str:
     match level:
         case 1:
             bg, color = "#d1e7dd", "#0a6640"
@@ -245,7 +248,8 @@ def build_email(title, content_html):
 def send_email(session):
     EMAIL_USERNAME = os.getenv("EMAIL_USERNAME")
     EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-    msg = MIMEText(build_email("Loans", build_table(["Title", "Due Date", "Renewals Remaining", "Status"], [loan.table_row() for loan in session.loans.values()])), "html")
+    msg = MIMEText(build_email("Loans", build_table(["Title", "Due Date", "Renewals Remaining", "Status"],
+                                                    [loan.table_row() for loan in session.loans.values()])), "html")
     msg["Subject"] = "Daily Library Loan Report"
     msg["From"] = f"Uusia Daily Email<{EMAIL_USERNAME}>"
     msg["To"] = EMAIL_USERNAME
@@ -259,6 +263,7 @@ def main():
     message = check_books()
     print(message)
     send_email(message)
+
 
 if __name__ == "__main__":
     main()
