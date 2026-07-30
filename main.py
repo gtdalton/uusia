@@ -129,8 +129,11 @@ def check_books():
                 due_date = datetime.datetime.strptime(
                     loan_row.find_element(By.XPATH, './/td[@data-caption="Due"]/span').text, "%d %b %Y"
                 ).date()
-                renewals_remaining = 4 - int(re.search(r"\d+", loan_row.find_element(By.XPATH,
-                                                                                     './/span[contains(text(), "Renewed")]').text).group())
+                if previous_renewals_status := loan_row.find_element(By.XPATH,'.//span[contains(text(), "Renewed")]'):
+                    renewals_remaining = 4 - int(re.search(r"\d+",previous_renewals_status.text).group())
+                else:
+                    renewals_remaining = 4
+
                 loan = Loan(title, due_date, renewals_remaining)
                 session.loans[title] = loan
 
