@@ -11,6 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -72,7 +73,7 @@ class Session:
 
 def check_books():
     session = Session()
-    # if os.environ.get("GITHUB_ACTIONS") == "true"
+    # Only open Selenium Chrome window during Pycharm Debug mode
     if not (os.environ.get("PYDEVD_LOAD_VALUES_ASYNC")):
         options = Options()
         options.add_argument("--headless")
@@ -124,41 +125,42 @@ def check_books():
             if not loans:
                 print("No loans found")
                 return session
+            renewal_required = False
             for i, loan_row in enumerate(loans):
                 title = loan_row.find_element(By.XPATH, './/td/h3[@class="card-title mb-0"]/span/a/span').text
                 due_date = datetime.datetime.strptime(
                     loan_row.find_element(By.XPATH, './/td[@data-caption="Due"]/span').text, "%d %b %Y"
                 ).date()
-                if previous_renewals_status := loan_row.find_element(By.XPATH,'.//span[contains(text(), "Renewed")]'):
-                    renewals_remaining = 4 - int(re.search(r"\d+",previous_renewals_status.text).group())
-                else:
+                try:
+                    renewals_remaining = 4 - int(re.search(r"\d+", loan_row.find_element(By.XPATH,
+                                                                                     './/span[contains(text(), "Renewed")]').text).group())
+                except NoSuchElementException:
                     renewals_remaining = 4
-
                 loan = Loan(title, due_date, renewals_remaining)
                 session.loans[title] = loan
 
                 if loan.is_due_for_renewal():
                     # select due
                     loan_row.find_element(By.XPATH, f'.//input[@id="selCheck{i + 1}"]').click()
-            # Renew selections
-            wait.until(EC.element_to_be_clickable((By.XPATH, '//a[text()="Renew selections"]'))).click()
-            loans = wait.until(EC.visibility_of_element_located(
-                (By.XPATH, '//div[@class="result-content-records"]//tbody'))).find_elements(By.TAG_NAME, "tr")
+                    renewal_required = True
+            if renewal_required:
+                # Renew selections
+                wait.until(EC.element_to_be_clickable((By.XPATH, '//a[text()="Renew selections"]'))).click()
+                loans = wait.until(EC.visibility_of_element_located(
+                    (By.XPATH, '//div[@class="result-content-records"]//tbody'))).find_elements(By.TAG_NAME, "tr")
 
-            # Testing - remove this line
-            driver.save_screenshot("debug.png")
-
-            for loan_row in loans:
-                title = loan_row.find_element(By.XPATH, './/td/h3[@class="card-title mb-0"]/span/a/span').text
-                due_date = datetime.datetime.strptime(
-                    loan_row.find_element(By.XPATH, './/td[@data-caption="Due"]/span').text, "%d %b %Y"
-                ).date()
-                status = loan_row.find_elements(By.TAG_NAME, "td")[4].find_element(By.XPATH, './/div').text
-                if status == "Success":
-                    session.loans[title].renew(due_date)
+                for loan_row in loans:
+                    title = loan_row.find_element(By.XPATH, './/td/h3[@class="card-title mb-0"]/span/a/span').text
+                    due_date = datetime.datetime.strptime(
+                        loan_row.find_element(By.XPATH, './/td[@data-caption="Due"]/span').text, "%d %b %Y"
+                    ).date()
+                    status = loan_row.find_elements(By.TAG_NAME, "td")[4].find_element(By.XPATH, './/div').text
+                    if status == "Success":
+                        session.loans[title].renew(due_date)
 
 
-        except:
+        except Exception as e:
+            print(f"Exception: {e}: check debug screenshot")
             driver.save_screenshot("debug.png")
         finally:
             return session
@@ -233,7 +235,7 @@ def build_email(title, content_html):
                 <tr>
                     <td style="background-color: #f4f4f4; padding: 16px 32px; border-top: 1px solid #eeeeee;">
                         <p style="margin: 0; color: #999999; font-size: 12px;">
-                            Generated automatically · {datetime.datetime.now().strftime("%d %b %Y %H:%M")}
+                            Generated automatically for {os.getenv("SPYDUS_USERNAME")}· {datetime.datetime.now().strftime("%d %b %Y %H:%M")}
                         </p>
                     </td>
                 </tr>
@@ -251,7 +253,7 @@ def build_email(title, content_html):
 def send_email(session):
     EMAIL_USERNAME = os.getenv("EMAIL_USERNAME")
     EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-    msg = MIMEText(build_email("Loans", build_table(["Title", "Due Date", "Renewals Remaining", "Status"],
+    msg = MIMEText(build_email(f"Loans", build_table(["Title", "Due Date", "Renewals Remaining", "Status"],
                                                     [loan.table_row() for loan in session.loans.values()])), "html")
     msg["Subject"] = "Daily Library Loan Report"
     msg["From"] = f"Uusia Daily Email<{EMAIL_USERNAME}>"
