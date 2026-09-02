@@ -32,5 +32,5 @@ jobs:
         with:
           name: debug-files
           path: |
-            screenshot.png
+            debug.png
             error.html
