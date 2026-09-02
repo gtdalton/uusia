@@ -3,6 +3,7 @@ name: Daily Script
 on:
   schedule:
     - cron: "0 4 * * *"  # runs every day at 8am UTC
+  workflow_dispatch:  # allows manual triggering when desired
 
 jobs:
   run-script:
