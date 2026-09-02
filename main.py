@@ -5,7 +5,7 @@ import smtplib
 from email.mime.text import MIMEText
 import datetime
 
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -82,7 +82,7 @@ def check_books():
         options.add_argument("--disable-dev-shm-usage")
     else:
         options = None
-    with webdriver.Chrome(options=options) as driver:
+    with uc.Chrome(options=options) as driver:
         try:
             print("Loading page...")
             driver.get("https://brighton-hove.spydus.co.uk/")
