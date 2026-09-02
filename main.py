@@ -112,12 +112,12 @@ def check_books():
 
             field.send_keys(Keys.RETURN)
 
-            current_loans = wait.until(EC.element_to_be_clickable((
+            current_loans_button = wait.until(EC.element_to_be_clickable((
                 By.XPATH, '//a[contains(@href, "LOANRENQ")]'
             )))
             session.login_success = True
             print("Logged in successfully! Finding loans")
-            current_loans.click()
+            current_loans_button.click()
 
             loans = wait.until(
                 EC.visibility_of_element_located((By.XPATH, '//div[@id="mainContent"]//tbody'))).find_elements(
@@ -162,6 +162,9 @@ def check_books():
         except Exception as e:
             print(f"Exception: {e}: check debug screenshot")
             driver.save_screenshot("debug.png")
+            with open("error.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source)
+
         finally:
             return session
 

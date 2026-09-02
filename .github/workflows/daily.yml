@@ -26,10 +26,11 @@ jobs:
           SPYDUS_USERNAME: ${{ secrets.SPYDUS_USERNAME }}
         run: python main.py
 
-      - name: Upload screenshot
+      - name: Upload debug files on failure
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v3
         with:
-          name: debug-screenshot
-          path: debug.png
-          if-no-files-found: ignore
+          name: debug-files
+          path: |
+            screenshot.png
+            error.html
