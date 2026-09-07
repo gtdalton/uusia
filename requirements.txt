@@ -1,3 +1,4 @@
 selenium
 python-dotenv
 undetected_chromedriver
+setuptools
