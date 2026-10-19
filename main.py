@@ -99,6 +99,15 @@ def check_books():
             print("Logging in...")
             element = wait.until(EC.element_to_be_clickable((By.ID, "navbarLoginMenuLink1")))
             element.click()
+            print("debug point 1")
+
+            # click Begin button if it is shown
+            try:
+                button = wait.until(EC.element_to_be_clickable((By.ID, "amzn-captcha-verify-button")))
+                print("Captcha...")
+                button.click()
+            except:
+                pass
 
             username = os.getenv("SPYDUS_USERNAME")
             SPYDUS_PASSWORD = os.getenv("SPYDUS_PASSWORD")
@@ -114,13 +123,6 @@ def check_books():
             print("Sending username/password")
             field.send_keys(Keys.RETURN)
 
-            # click Begin button if it is shown
-            try:
-                button = wait.until(EC.element_to_be_clickable((By.ID, "amzn-captcha-verify-button")))
-                print("Captcha...")
-                button.click()
-            except:
-                pass
 
             current_loans_button = wait.until(EC.element_to_be_clickable((
                 By.XPATH, '//a[contains(@href, "LOANRENQ")]'
