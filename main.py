@@ -112,6 +112,11 @@ def check_books():
 
             field.send_keys(Keys.RETURN)
 
+            # click Begin button if it is shown
+            buttons = driver.find_elements(By.XPATH, '//button[contains(text(), "Begin")]')
+            if buttons:
+                buttons[0].click()
+
             current_loans_button = wait.until(EC.element_to_be_clickable((
                 By.XPATH, '//a[contains(@href, "LOANRENQ")]'
             )))
