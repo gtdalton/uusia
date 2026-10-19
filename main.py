@@ -114,9 +114,8 @@ def check_books():
 
             # click Begin button if it is shown
             try:
-                buttons = wait.until(EC.element_to_be_clickable((By.ID, "amzn-captcha-verify-button")))
-                if buttons:
-                    buttons[0].click()
+                button = wait.until(EC.element_to_be_clickable((By.ID, "amzn-captcha-verify-button")))
+                button.click()
             except:
                 pass
 
