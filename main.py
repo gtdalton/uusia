@@ -84,9 +84,17 @@ def check_books():
         options = None
     with uc.Chrome(options=options) as driver:
         try:
-            print("Loading page... testing")
+            print("Loading page...")
             driver.get("https://brighton-hove.spydus.co.uk/")
             wait = WebDriverWait(driver, 10)  # wait up to 10 seconds
+
+            # click Begin button if it is shown
+            try:
+                button = wait.until(EC.element_to_be_clickable((By.ID, "amzn-captcha-verify-button")))
+                print("Captcha...")
+                button.click()
+            except:
+                pass
 
             # Clear cookies
             try:
@@ -101,13 +109,6 @@ def check_books():
             element.click()
             print("debug point 1")
 
-            # click Begin button if it is shown
-            try:
-                button = wait.until(EC.element_to_be_clickable((By.ID, "amzn-captcha-verify-button")))
-                print("Captcha...")
-                button.click()
-            except:
-                pass
 
             username = os.getenv("SPYDUS_USERNAME")
             SPYDUS_PASSWORD = os.getenv("SPYDUS_PASSWORD")
