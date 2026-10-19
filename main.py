@@ -84,7 +84,7 @@ def check_books():
         options = None
     with uc.Chrome(options=options) as driver:
         try:
-            print("Loading page...")
+            print("Loading page... testing")
             driver.get("https://brighton-hove.spydus.co.uk/")
             wait = WebDriverWait(driver, 10)  # wait up to 10 seconds
 
