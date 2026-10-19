@@ -91,6 +91,7 @@ def check_books():
             # Clear cookies
             try:
                 accept_btn = wait.until(EC.element_to_be_clickable((By.ID, "offcanvasCookie_req")))
+                print("Accepting cookies...")
                 accept_btn.click()
             except:
                 pass  # no cookie popup appeared, carry on
@@ -110,11 +111,13 @@ def check_books():
             field.clear()  # clear any existing text first
             field.send_keys(SPYDUS_PASSWORD)
 
+            print("Sending username/password")
             field.send_keys(Keys.RETURN)
 
             # click Begin button if it is shown
             try:
                 button = wait.until(EC.element_to_be_clickable((By.ID, "amzn-captcha-verify-button")))
+                print("Captcha...")
                 button.click()
             except:
                 pass
