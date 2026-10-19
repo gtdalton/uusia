@@ -113,7 +113,7 @@ def check_books():
             field.send_keys(Keys.RETURN)
 
             # click Begin button if it is shown
-            buttons = driver.find_elements(By.XPATH, '//button[contains(text(), "Begin")]')
+            buttons = driver.find_elements(By.ID, "amzn-captcha-verify-button")
             if buttons:
                 buttons[0].click()
 
