@@ -1,4 +1,6 @@
 selenium
 python-dotenv
 undetected_chromedriver
+cryptography
+bs4
 setuptools
