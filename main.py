@@ -246,7 +246,11 @@ class CheckBooksAPI:
         login_page_url = self.base_url + "cgi-bin/spydus.exe/MSGTRN/OPAC/LOGINB"
         response = self.session.get(login_page_url)
         if response.status_code != 200:
-            print(f"Failed to load login page: {login_page_url}: {response.status_code}")
+            print(f"Failed to load login page: {login_page_url} : Error {response.status_code}")
+            print("Status:", response.status_code)
+            print("URL:", response.url)
+            print("Method:", response.request.method)
+            print("Response:", response.text[:1000])
             return self.status
 
         # login
